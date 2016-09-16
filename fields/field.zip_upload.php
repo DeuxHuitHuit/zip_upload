@@ -52,9 +52,35 @@
 		
 		public function processRawFieldData($data, &$status, &$message = null, $simulate = false, $entry_id = null)
 		{
-			if (is_string($data)) {
-				// not a new upload
+			$ret = parent::processRawFieldData($data, $status, $message, $simulate, $entry_id);
+			// new upload
+			if ($status === self::__OK__ && is_array($data) && !empty($data['tmp_name']) && $data['error'] === UPLOAD_ERR_OK) {
+				$root = DOCROOT . trim($this->get('destination'), '') . '/';
+				$file = $root . $ret['file'];
+				$dest = $root . basename($ret['file'], '.zip');
+				if (@file_exists($dest)) {
+					$message = __("Destination folder `%s` already exists.", array($dest));
+					$status = self::__ERROR_CUSTOM__;
+					return $ret;
+				}
+				General::realiseDirectory($dest, Symphony::Configuration()->get('write_mode', 'directory'));
+				if (!$this->unzipFile($dest, $file)) {
+					$message = __("Failed to unzip `%s`.", array(basename($file)));
+					$status = self::__ERROR_CUSTOM__;
+					return $ret;
+				}
 			}
-			return parent::processRawFieldData($data, $status, $message, $simulate, $entry_id);
+			return $ret;
+		}
+		
+		private function unzipFile($dest, $file)
+		{
+			$zip = new ZipArchive();
+			if (!$zip->open($file)) {
+				return false;
+			}
+			$zip->extractTo($dest);
+			$zip->close();
+			return true;
 		}
 	}
