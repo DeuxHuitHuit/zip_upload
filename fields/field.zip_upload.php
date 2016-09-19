@@ -143,17 +143,6 @@
 			$wrapper->appendChild($fieldxml);
 		}
 		
-		private function mergeFiles(array $structure, &$files = array())
-		{
-			foreach ($structure['filelist'] as $file) {
-				$files[] = $file;
-			}
-			foreach ($structure['dirlist'] as $dir) {
-				$this->mergeFiles($structure[$dir], $files);
-			}
-			return $files;
-		}
-		
 		/*-------------------------------------------------------------------------
 			Utilities:
 		-------------------------------------------------------------------------*/
@@ -177,6 +166,17 @@
 			return true;
 		}
 		
+		private function mergeFiles(array $structure, &$files = array())
+		{
+			foreach ($structure['filelist'] as $file) {
+				$files[] = $file;
+			}
+			foreach ($structure['dirlist'] as $dir) {
+				$this->mergeFiles($structure[$dir], $files);
+			}
+			return $files;
+		}
+		
 		private function unzipFile($dest, $file)
 		{
 			$zip = new ZipArchive();
@@ -185,6 +185,14 @@
 			}
 			$zip->extractTo($dest);
 			$zip->close();
+			$structure = General::listStructure($dest);
+			$files = $this->mergeFiles($structure);
+			$blacklist = Symphony::Configuration()->get('upload_blacklist', 'admin');
+			foreach ($files as $file) {
+				if (!empty($blacklist) && General::validateString($file, $blacklist)) {
+					@unlink($file);
+				}
+			}
 			return true;
 		}
 	}
