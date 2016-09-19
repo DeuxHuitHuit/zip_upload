@@ -117,6 +117,44 @@
 		}
 		
 		/*-------------------------------------------------------------------------
+		    Output:
+		-------------------------------------------------------------------------*/
+
+		public function appendFormattedElement(XMLElement &$wrapper, $data, $encode = false, $mode = null, $entry_id = null)
+		{
+			if (!is_array($data) || !isset($data['file']) || is_null($data['file'])) {
+				return;
+			}
+			$fakeWrapper = new XMLElement('fake');
+			parent::appendFormattedElement($fakeWrapper, $data, $encode, $mode, $entry_id);
+			$fieldxml = $fakeWrapper->getChild(0);
+			if (!$fieldxml) {
+				return;
+			}
+			
+			$locations = $this->getFilesLocations($data);
+			$structure = General::listStructure($locations['dest'], array(), true, 'asc', DOCROOT);
+			$files = $this->mergeFiles($structure);
+			$xmlFiles = new XMLElement('files');
+			foreach ($files as $file) {
+				$xmlFiles->appendChild(new XMLElement('file', $file));
+			}
+			$fieldxml->appendChild($xmlFiles);
+			$wrapper->appendChild($fieldxml);
+		}
+		
+		private function mergeFiles(array $structure, &$files = array())
+		{
+			foreach ($structure['filelist'] as $file) {
+				$files[] = $file;
+			}
+			foreach ($structure['dirlist'] as $dir) {
+				$this->mergeFiles($structure[$dir], $files);
+			}
+			return $files;
+		}
+		
+		/*-------------------------------------------------------------------------
 			Utilities:
 		-------------------------------------------------------------------------*/
 
