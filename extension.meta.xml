@@ -18,6 +18,9 @@
 		</author>
 	</authors>
 	<releases>
+		<release version="1.0.1" date="2016-10-04" min="2.6.0" max="2.6.x">
+			- Fixed a critical bug where the whole destination folder could get deleted
+		</release>
 		<release version="1.0.0" date="2016-09-19" min="2.6.0" max="2.6.x">
 			- First release
 		</release>
