@@ -59,11 +59,8 @@
 			
 			// parent went well
 			if (is_array($data) && $status === self::__OK__) {
-				// Get our locations
-				$locations = $this->getFilesLocations($ret);
-				$file = $locations['file'];
-				$dest = $locations['dest'];
 				$existing_file = null;
+				$exitingLocations = null;
 				
 				// Check to see if the entry already has a file associated with it:
 				if (is_null($entry_id) === false) {
@@ -80,23 +77,37 @@
 					$exitingLocations = $this->getFilesLocations(array('file' => $existing_file));
 
 					// File was removed:
-					if (
+					if (!empty($exitingLocations) &&
 						$data['error'] == UPLOAD_ERR_NO_FILE
 						&& !is_null($existing_file)
 						&& is_dir($exitingLocations['dest'])
 					) {
-						General::deleteDirectory($exitingLocations['dest']);
+						Symphony::Log()->pushToLog('Attempting to delete removed file ' . $exitingLocations['dest'], E_NOTICE, true);
+						General::deleteDirectory($exitingLocations['dest'], false);
 					}
 				}
 				
 				// new upload
 				if (is_array($data) && !empty($data['tmp_name']) && $data['error'] === UPLOAD_ERR_OK) {
+					// Get our locations
+					$locations = $this->getFilesLocations($ret);
+					// Valid locations ?
+					if (empty($locations)) {
+						$message = __('Failed to find file location');
+						$status = self::__ERROR_CUSTOM__;
+						return $ret;
+					}
+					$file = $locations['file'];
+					$dest = $locations['dest'];
+
 					if (@file_exists($dest)) {
 						$message = __("Destination folder `%s` already exists.", array($dest));
 						$status = self::__ERROR_CUSTOM__;
 						return $ret;
 					}
+
 					General::realiseDirectory($dest, Symphony::Configuration()->get('write_mode', 'directory'));
+
 					if (!$this->unzipFile($dest, $file)) {
 						$message = __("Failed to unzip `%s`.", array(basename($file)));
 						$status = self::__ERROR_CUSTOM__;
@@ -105,12 +116,13 @@
 				}
 				
 				// File has been replaced:
-				if (
+				if (!empty($exitingLocations) &&
 					isset($existing_file)
 					&& $existing_file !== $file
 					&& is_dir($exitingLocations['dest'])
 				) {
-					General::deleteDirectory($exitingLocations['dest']);
+					Symphony::Log()->pushToLog('Attempting to replaced removed file ' . $exitingLocations['dest'], E_NOTICE, true);
+					General::deleteDirectory($exitingLocations['dest'], false);
 				}
 			}
 			return $ret;
@@ -133,13 +145,18 @@
 			}
 			
 			$locations = $this->getFilesLocations($data);
-			$structure = General::listStructure($locations['dest'], array(), true, 'asc', DOCROOT);
-			$files = $this->mergeFiles($structure);
-			$xmlFiles = new XMLElement('files');
-			foreach ($files as $file) {
-				$xmlFiles->appendChild(new XMLElement('file', $file));
+			if (!empty($locations)) {
+				$structure = General::listStructure($locations['dest'], array(), true, 'asc', DOCROOT);
+				$files = $this->mergeFiles($structure);
+				$xmlFiles = new XMLElement('files');
+				foreach ($files as $file) {
+					$xmlFiles->appendChild(new XMLElement('file', $file));
+				}
+				$fieldxml->appendChild($xmlFiles);
 			}
-			$fieldxml->appendChild($xmlFiles);
+			else {
+				$fieldxml->appendChild(new XMLElement('error'), 'Failed to find file location');
+			}
 			$wrapper->appendChild($fieldxml);
 		}
 		
@@ -149,10 +166,21 @@
 
 		public function getFilesLocations($ret)
 		{
-			$root = DOCROOT . trim($this->get('destination'), '') . '/';
+			$dest = trim($this->get('destination'), '');
+			if (empty($dest)) {
+				return null;
+			}
+			if (!is_array($ret) || empty($ret['file'])) {
+				return null;
+			}
+			$base = basename($ret['file'], '.zip');
+			if (empty($base)) {
+				return null;
+			}
+			$root = DOCROOT . $dest . '/';
 			return array(
 				'file' => $root . $ret['file'],
-				'dest' => $root . basename($ret['file'], '.zip'),
+				'dest' => $root . $base,
 			);
 		}
 
@@ -161,7 +189,10 @@
 			parent::entryDataCleanup($entry_id, $data);
 			if (is_array($data)) {
 				$locations = $this->getFilesLocations($data);
-				General::deleteDirectory($locations['dest']);
+				if (!empty($locations)) {
+					Symphony::Log()->pushToLog('Attempting to delete cleanup file ' . $locations['dest'], E_NOTICE, true);
+					General::deleteDirectory($locations['dest'], false);
+				}
 			}
 			return true;
 		}
