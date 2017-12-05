@@ -147,12 +147,14 @@
 			$locations = $this->getFilesLocations($data);
 			if (!empty($locations)) {
 				$structure = General::listStructure($locations['dest'], array(), true, 'asc', DOCROOT);
-				$files = $this->mergeFiles($structure);
-				$xmlFiles = new XMLElement('files');
-				foreach ($files as $file) {
-					$xmlFiles->appendChild(new XMLElement('file', $file));
+				if ($structure != null) {
+					$files = $this->mergeFiles($structure);
+					$xmlFiles = new XMLElement('files');
+					foreach ($files as $file) {
+						$xmlFiles->appendChild(new XMLElement('file', $file));
+					}
+					$fieldxml->appendChild($xmlFiles);
 				}
-				$fieldxml->appendChild($xmlFiles);
 			}
 			else {
 				$fieldxml->appendChild(new XMLElement('error'), 'Failed to find file location');
@@ -199,11 +201,13 @@
 		
 		private function mergeFiles(array $structure, &$files = array())
 		{
-			foreach ($structure['filelist'] as $file) {
-				$files[] = $file;
-			}
-			foreach ($structure['dirlist'] as $dir) {
-				$this->mergeFiles($structure[$dir], $files);
+			if ($strucutre != null) {
+				foreach ($structure['filelist'] as $file) {
+					$files[] = $file;
+				}
+				foreach ($structure['dirlist'] as $dir) {
+					$this->mergeFiles($structure[$dir], $files);
+				}
 			}
 			return $files;
 		}
