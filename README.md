@@ -1,7 +1,5 @@
 # Zip Upload Field
 
-Version: 1.0.x
-
 > A file upload that unzip zips
 
 ### REQUIREMENTS ###
