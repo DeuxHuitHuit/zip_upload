@@ -38,7 +38,53 @@
 		
 		public function displaySettingsPanel(XMLElement &$wrapper, $errors = null)
 		{
-			parent::displaySettingsPanel($wrapper, $errors);
+			Field::displaySettingsPanel($wrapper, $errors);
+
+			// Destination Folder
+			$ignore = array(
+				'/workspace/events',
+				'/workspace/data-sources',
+				'/workspace/text-formatters',
+				'/workspace/pages',
+				'/workspace/utilities'
+			);
+			$directories = General::listDirStructure(WORKSPACE, null, true, DOCROOT, $ignore);
+
+			$label = Widget::Label(__('Destination Directory'));
+
+			$options = array();
+			$destinationFound = false;
+
+			if (!empty($directories) && is_array($directories)) {
+				foreach ($directories as $d) {
+					$d = '/' . trim($d, '/');
+
+					if (!in_array($d, $ignore)) {
+						$isSelected = $this->get('destination') === $d;
+						if ($isSelected) {
+							$destinationFound = true;
+						}
+						$options[] = array($d, $isSelected, $d);
+					}
+				}
+			}
+			if (!$destinationFound) {
+				array_unshift($options, array($this->get('destination'), false, $this->get('destination')));
+			}
+
+			$label->appendChild(Widget::Select('fields['.$this->get('sortorder').'][destination]', $options));
+
+			if (isset($errors['destination'])) {
+				$wrapper->appendChild(Widget::Error($label, $errors['destination']));
+			} else {
+				$wrapper->appendChild($label);
+			}
+
+			// Validation rule
+			$this->buildValidationSelect($wrapper, $this->get('validator'), 'fields['.$this->get('sortorder').'][validator]', 'upload', $errors);
+
+			// Requirements and table display
+			$this->appendStatusFooter($wrapper);
 		}
 		
 		public function buildValidationSelect(XMLElement &$wrapper, $selected = null, $name = 'fields[validator]', $type = 'input', array $errors = null)
@@ -129,7 +175,7 @@
 		}
 		
 		/*-------------------------------------------------------------------------
-		    Output:
+			Output:
 		-------------------------------------------------------------------------*/
 
 		public function appendFormattedElement(XMLElement &$wrapper, $data, $encode = false, $mode = null, $entry_id = null)
