@@ -5,7 +5,7 @@
 		A file upload that unzip zips.
 	</description>
 	<repo type="github">https://github.com/DeuxHuitHuit/zip_upload</repo>
-	<url type="discuss">http://www.getsymphony.com/discuss/thread/112285/</url>
+	<url type="discuss">https://www.getsymphony.com/discuss/thread/112285/</url>
 	<url type="issues">https://github.com/DeuxHuitHuit/zip_upload/issues</url>
 	<types>
 		<type>Upload</type>
@@ -18,6 +18,9 @@
 		</author>
 	</authors>
 	<releases>
+		<release version="1.1.0" date="2017-12-19" min="2.6.0" max="2.x.x">
+			- Allow the zip_upload to use a hidden directory
+		</release>
 		<release version="1.0.2" date="2017-12-05" min="2.6.0" max="2.x.x">
 			- Fix a fatal crash if directory structure is null
 		</release>
