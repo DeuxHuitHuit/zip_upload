@@ -18,6 +18,9 @@
 		</author>
 	</authors>
 	<releases>
+		<release version="1.2.0" date="2017-12-19" min="2.6.0" max="2.x.x">>
+			- Add an error message when destination fails
+		</release>
 		<release version="1.1.0" date="2017-12-19" min="2.6.0" max="2.x.x">
 			- Allow the zip_upload to use a hidden directory
 		</release>
