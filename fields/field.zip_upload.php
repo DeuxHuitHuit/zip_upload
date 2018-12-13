@@ -193,7 +193,9 @@
 			$locations = $this->getFilesLocations($data);
 			if (!empty($locations)) {
 				$structure = General::listStructure($locations['dest'], array(), true, 'asc', DOCROOT);
-				if ($structure != null) {
+				if (!is_array($structure)) {
+					$fieldxml->appendChild(new XMLElement('error'), 'Failed to list destination location');
+				} else {
 					$files = $this->mergeFiles($structure);
 					$xmlFiles = new XMLElement('files');
 					foreach ($files as $file) {
