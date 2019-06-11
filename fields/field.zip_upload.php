@@ -249,7 +249,7 @@
 		
 		private function mergeFiles(array $structure, &$files = array())
 		{
-			if ($strucutre != null) {
+			if ($structure != null) {
 				foreach ($structure['filelist'] as $file) {
 					$files[] = $file;
 				}
