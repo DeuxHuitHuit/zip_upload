@@ -18,6 +18,9 @@
 		</author>
 	</authors>
 	<releases>
+		<release version="1.2.1" date="2019-06-11" min="2.6.0" max="2.x.x">>
+			- Fix a typo that prevented the files to be listed
+		</release>
 		<release version="1.2.0" date="2017-12-19" min="2.6.0" max="2.x.x">>
 			- Add an error message when destination fails
 		</release>
